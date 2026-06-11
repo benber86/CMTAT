@@ -116,7 +116,7 @@ abstract contract CMTATBaseAllowlist is
     * To avoid this, callers should set the allowance to zero before assigning a new value
     * if strict control over the total amount a spender can consume is required.
     */
-    function approve(address spender, uint256 value) public virtual override(ERC20Upgradeable) whenNotPaused returns (bool) {
+    function approve(address spender, uint256 value) public virtual override whenNotPaused returns (bool) {
         return ERC20Upgradeable.approve(spender, value);
     }
 

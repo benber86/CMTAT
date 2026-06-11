@@ -196,6 +196,13 @@ abstract contract CMTATBaseCore is
         return ERC20BaseModule.transferFrom(from, to, value);
     }
 
+    /**
+    * @dev revert if the contract is in pause state
+    */
+    function approve(address spender, uint256 value) public virtual override(ERC20Upgradeable) whenNotPaused returns (bool) {
+        return ERC20Upgradeable.approve(spender, value);
+    }
+
     /*//////////////////////////////////////////////////////////////
                 Functions requiring several modules
     //////////////////////////////////////////////////////////////*/
