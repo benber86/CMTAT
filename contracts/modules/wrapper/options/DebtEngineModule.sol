@@ -15,6 +15,7 @@ import {IDebtEngineModule} from "../../../interfaces/modules/IDebtEngineModule.s
 abstract contract DebtEngineModule is IDebtEngineModule {
     /* ============ State Variables ============ */
     bytes32 public constant DEBT_ENGINE_ROLE = keccak256("DEBT_ENGINE_ROLE");
+    error CMTAT_DebtEngineModule_DebtEngineNotSet();
     /* ============ ERC-7201 ============ */
     // keccak256(abi.encode(uint256(keccak256("CMTAT.storage.DebtEngineModule")) - 1)) & ~bytes32(uint256(0xff))
     bytes32 private constant DebtEngineModuleStorageLocation = 0xcd6e7f8fdfee4389651c62f4d8dd0b8f0f4b97b1582a8419b0c53664203c6d00;
@@ -36,16 +37,17 @@ abstract contract DebtEngineModule is IDebtEngineModule {
     /* ============  State Restricted Functions ============ */
     /**
     * @notice Sets a new external DebtEngine contract to delegate debt logic.
-    * @dev Only callable by accounts with the `DEBT_ROLE`.
+    * @dev Only callable by accounts with the `DEBT_ENGINE_ROLE`. The new engine must not be the zero address.
     * Emits a {DebtEngine} event upon successful update.
     * @param debtEngine_ The address of the new DebtEngine contract.
     * @custom:access-control
-    * - the caller must have the `DEBT_ROLE`.
+    * - the caller must have the `DEBT_ENGINE_ROLE`.
     */
     function setDebtEngine(
         IDebtEngine debtEngine_
     ) public virtual override(IDebtEngineModule) onlyDebtEngineManager {
         DebtModuleStorage storage $ = _getDebtEngineModuleStorage();
+        require(address(debtEngine_) != address(0), CMTAT_DebtEngineModule_DebtEngineNotSet());
         require(address($._debtEngine) != address(debtEngine_), CMTAT_DebtEngineModule_SameValue());
         _setDebtEngine($, debtEngine_);
     }
@@ -53,28 +55,28 @@ abstract contract DebtEngineModule is IDebtEngineModule {
     /* ============ View functions ============ */
     /**
     * @notice Returns the current credit events information.
-    * @dev Delegates to the external DebtEngine if set; otherwise returns the base implementation from DebtModule.
+    * @dev Delegates to the external DebtEngine. Reverts if no DebtEngine is configured.
     * @return creditEvents_ The current credit events structure.
     * @inheritdoc ICMTATCreditEvents
     */
     function creditEvents() public view virtual override(ICMTATCreditEvents) returns(CreditEvents memory creditEvents_){
         DebtModuleStorage storage $ = _getDebtEngineModuleStorage();
-        if(address($._debtEngine) != address(0)){
-            creditEvents_ =  $._debtEngine.creditEvents();
-        }
+        IDebtEngine debtEngine_ = $._debtEngine;
+        require(address(debtEngine_) != address(0), CMTAT_DebtEngineModule_DebtEngineNotSet());
+        creditEvents_ = debtEngine_.creditEvents();
     }
 
     /**
     * @notice Returns the current debt information.
-    * @dev Delegates to the external DebtEngine if set; otherwise returns the base implementation from DebtModule.
+    * @dev Delegates to the external DebtEngine. Reverts if no DebtEngine is configured.
     * @return debtInformation_ The current debt data structure.
     * @inheritdoc ICMTATDebt
     */
     function debt() public view virtual override(ICMTATDebt) returns(DebtInformation memory debtInformation_){
         DebtModuleStorage storage $ = _getDebtEngineModuleStorage();
-        if(address($._debtEngine) != address(0)){
-            debtInformation_ =  $._debtEngine.debt();
-        } 
+        IDebtEngine debtEngine_ = $._debtEngine;
+        require(address(debtEngine_) != address(0), CMTAT_DebtEngineModule_DebtEngineNotSet());
+        debtInformation_ = debtEngine_.debt();
     }
 
     /**
