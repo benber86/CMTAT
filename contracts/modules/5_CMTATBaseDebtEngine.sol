@@ -2,6 +2,7 @@
 
 pragma solidity ^0.8.20;
 /* ==== Module === */
+import {DebtModule} from "./wrapper/options/DebtModule.sol";
 import {DebtEngineModule} from "./wrapper/options/DebtEngineModule.sol";
 import {CMTATBaseERC20CrossChain} from "./4_CMTATBaseERC20CrossChain.sol";
 /**
@@ -9,4 +10,5 @@ import {CMTATBaseERC20CrossChain} from "./4_CMTATBaseERC20CrossChain.sol";
 */
 abstract contract CMTATBaseDebtEngine is DebtEngineModule, CMTATBaseERC20CrossChain {
    function _authorizeDebtEngineManagement() internal virtual override(DebtEngineModule) onlyRole(DEBT_ENGINE_ROLE){}
+   function _authorizeDebtManagement() internal virtual override(DebtModule) onlyRole(DEBT_ROLE){}
 }

@@ -6,13 +6,14 @@ pragma solidity ^0.8.20;
 import {IDebtEngine, ICMTATDebt, ICMTATCreditEvents} from "../../../interfaces/engine/IDebtEngine.sol";
 /* ==== Module === */
 import {IDebtEngineModule} from "../../../interfaces/modules/IDebtEngineModule.sol";
+import {DebtModule} from "./DebtModule.sol";
 /**
  * @title Debt Engine module
  * @dev 
  *
  * Retrieve debt and creditEvents information from a debtEngine (external contract)
  */
-abstract contract DebtEngineModule is IDebtEngineModule {
+abstract contract DebtEngineModule is IDebtEngineModule, DebtModule {
     /* ============ State Variables ============ */
     bytes32 public constant DEBT_ENGINE_ROLE = keccak256("DEBT_ENGINE_ROLE");
     /* ============ ERC-7201 ============ */
@@ -20,7 +21,7 @@ abstract contract DebtEngineModule is IDebtEngineModule {
     bytes32 private constant DebtEngineModuleStorageLocation = 0xcd6e7f8fdfee4389651c62f4d8dd0b8f0f4b97b1582a8419b0c53664203c6d00;
  
     /* ==== ERC-7201 State Variables === */
-    struct DebtModuleStorage {
+    struct DebtEngineModuleStorage {
         IDebtEngine _debtEngine;
     }
         /* ============ Modifier ============ */
@@ -45,7 +46,7 @@ abstract contract DebtEngineModule is IDebtEngineModule {
     function setDebtEngine(
         IDebtEngine debtEngine_
     ) public virtual override(IDebtEngineModule) onlyDebtEngineManager {
-        DebtModuleStorage storage $ = _getDebtEngineModuleStorage();
+        DebtEngineModuleStorage storage $ = _getDebtEngineModuleStorage();
         require(address($._debtEngine) != address(debtEngine_), CMTAT_DebtEngineModule_SameValue());
         _setDebtEngine($, debtEngine_);
     }
@@ -57,11 +58,12 @@ abstract contract DebtEngineModule is IDebtEngineModule {
     * @return creditEvents_ The current credit events structure.
     * @inheritdoc ICMTATCreditEvents
     */
-    function creditEvents() public view virtual override(ICMTATCreditEvents) returns(CreditEvents memory creditEvents_){
-        DebtModuleStorage storage $ = _getDebtEngineModuleStorage();
+    function creditEvents() public view virtual override(DebtModule, ICMTATCreditEvents) returns(CreditEvents memory creditEvents_){
+        DebtEngineModuleStorage storage $ = _getDebtEngineModuleStorage();
         if(address($._debtEngine) != address(0)){
-            creditEvents_ =  $._debtEngine.creditEvents();
+            return $._debtEngine.creditEvents();
         }
+        return DebtModule.creditEvents();
     }
 
     /**
@@ -70,11 +72,12 @@ abstract contract DebtEngineModule is IDebtEngineModule {
     * @return debtInformation_ The current debt data structure.
     * @inheritdoc ICMTATDebt
     */
-    function debt() public view virtual override(ICMTATDebt) returns(DebtInformation memory debtInformation_){
-        DebtModuleStorage storage $ = _getDebtEngineModuleStorage();
+    function debt() public view virtual override(DebtModule, ICMTATDebt) returns(DebtInformation memory debtInformation_){
+        DebtEngineModuleStorage storage $ = _getDebtEngineModuleStorage();
         if(address($._debtEngine) != address(0)){
-            debtInformation_ =  $._debtEngine.debt();
-        } 
+            return $._debtEngine.debt();
+        }
+        return DebtModule.debt();
     }
 
     /**
@@ -82,7 +85,7 @@ abstract contract DebtEngineModule is IDebtEngineModule {
     * @return debtEngine_ The contract address of the debt engine in use.
     */
     function debtEngine() public view virtual override(IDebtEngineModule) returns (IDebtEngine debtEngine_) {
-        DebtModuleStorage storage $ = _getDebtEngineModuleStorage();
+        DebtEngineModuleStorage storage $ = _getDebtEngineModuleStorage();
         return $._debtEngine;
     }
 
@@ -90,7 +93,7 @@ abstract contract DebtEngineModule is IDebtEngineModule {
                             INTERNAL/PRIVATE FUNCTIONS
     //////////////////////////////////////////////////////////////*/
     function _setDebtEngine(
-        DebtModuleStorage storage $, IDebtEngine debtEngine_
+        DebtEngineModuleStorage storage $, IDebtEngine debtEngine_
     ) internal {
         $._debtEngine = debtEngine_;
         emit DebtEngine(debtEngine_);
@@ -102,7 +105,7 @@ abstract contract DebtEngineModule is IDebtEngineModule {
     /* ==== Access Control ==== */
     function _authorizeDebtEngineManagement() internal virtual;
     /* ============ ERC-7201 ============ */
-    function _getDebtEngineModuleStorage() internal pure returns (DebtModuleStorage storage $) {
+    function _getDebtEngineModuleStorage() internal pure returns (DebtEngineModuleStorage storage $) {
         assembly {
             $.slot := DebtEngineModuleStorageLocation
         }
