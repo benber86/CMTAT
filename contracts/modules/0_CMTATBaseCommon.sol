@@ -141,8 +141,8 @@ abstract contract CMTATBaseCommon is
           // We perform the update here (CEI pattern)
           ERC20Upgradeable._update(from, to, amount);
 
-          // Required to use the balance before the update
-          snapshotEngineLocal.operateOnTransfer(from, to, fromBalanceBefore, toBalanceBefore, totalSupplyBefore);
+          // Required to use the balance before the update. Snapshot engine failures must not revert token updates.
+          try snapshotEngineLocal.operateOnTransfer(from, to, fromBalanceBefore, toBalanceBefore, totalSupplyBefore) {} catch {}
         } else {
             // Update without snapshot call
             ERC20Upgradeable._update(from, to, amount);
