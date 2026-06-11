@@ -31,6 +31,7 @@ abstract contract ERC20EnforcementModuleInternal is ERC20Upgradeable,IERC7551ERC
                             INTERNAL/PRIVATE FUNCTIONS
     //////////////////////////////////////////////////////////////*/
     function _setFrozenTokens(address account, uint256 value) internal virtual returns(bool) {
+        require(ERC20Upgradeable.balanceOf(account) >= value, CMTAT_ERC20EnforcementModule_ValueExceedsAvailableBalance());
         ERC20EnforcementModuleStorage storage $ = _getEnforcementModuleStorage();
         uint256 frozenTokensLocal = $._frozenTokens[account];
         // Unfreeze path
