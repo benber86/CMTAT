@@ -94,21 +94,6 @@ abstract contract ERC20EnforcementModuleInternal is ERC20Upgradeable,IERC7551ERC
         if(to == address(0)){
             ERC20Upgradeable._burn(from, value);
         } else{
-            // Spend allowance
-            // See https://ethereum-magicians.org/t/erc-3643-the-t-rex-token-standard/6844/11
-            uint256 currentAllowance = allowance(from, to);
-            if (currentAllowance > 0 && currentAllowance < type(uint256).max) {
-                if (currentAllowance < value) {
-                     unchecked {
-                        ERC20Upgradeable._approve(from, to, 0, false);
-                     }
-                } else{
-                    unchecked {
-                         ERC20Upgradeable._approve(from, to, currentAllowance - value, false);
-                    }
-                }
-              
-            }
             ERC20Upgradeable._transfer(from, to, value);
         }
         emit Enforcement(_msgSender(), from, value, data);
